@@ -25,8 +25,9 @@ class Driver():
             t -= 1
         
     def __login(self, mPhone, mPass) -> None:
+        self.mPhone = mPhone
         self.browser.get("https://odibets.com")
-        print("Getting Odibet...")
+        print("Login Odibet...")
         WebDriverWait(self.browser, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#mobile-web-login'))
         )
@@ -50,8 +51,17 @@ class Driver():
             msg = 'Could not login user: '+ mPhone +' password: '+ mPass
             self.report.append(msg)
 
-    def __logout():
-        pass
+    def logout(self):
+        self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-header.rich.l-mobile > div.l-header-top > div > div.menu > i').click()
+        self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-sidebar.l-mobile.show > div > div:nth-child(6) > ul > li > div').click()
+
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '#mobile-web-login'))
+            )
+        except:
+            msg = 'Could not log out user: '+self.mPhone
+            self.report.append(msg)
 
 
     def __placeBet(self, code, stake):
@@ -59,6 +69,19 @@ class Driver():
         browserCode = self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div.l-betslip-mobile.l-mobile.show.small > div > div.code > div.code-input > input[type=text]')
         browserCode.send_keys(code)
         self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div.l-betslip-mobile.l-mobile.show.small > div > div.code > button').click()
+        
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div.l-betslip-mobile.l-mobile.show.small > div > div.bottom > div.bottom-cta > div > button'))
+        )
+        self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div.l-betslip-mobile.l-mobile.show.small > div > div.top > div.top-collapse > i').click()
+        stakeBox = self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div.l-betslip-mobile.l-mobile.show > div > div.bottom > div.bottom-stk > div.stk > div.stk-input > input[type=number]')
+        stakeBox.clear()
+        stakeBox.send_keys(stake)
+        self.timer(2)
+
+        self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div.l-betslip-mobile.l-mobile.show > div > div.bottom > div.bottom-cta > div > button').click()
+        self.timer(5)
+
 
     def report(self):
         print('\n\n\n')

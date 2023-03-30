@@ -16,16 +16,18 @@ __banner = """
 
 def __valid() -> bool:
 	canExpire = config('canExpire')
-	if canExpire == 1:
-		endTimestamp = config('daysToExpire')
+	if canExpire == '1':
+		endTimestamp = (float) (config('daysToExpire'))
 		currTimeStamp = datetime.datetime.now().timestamp()
 		return currTimeStamp < endTimestamp
+	else:
+		print('can expire not equal to 1')
 
-	return False
+	return True
 
 def __getFilePath() -> str:
 	filePath = input('Drag the CSV file here to begin\n')
-	return filePath
+	return filePath.strip()
 
 def __startBetting(driver, counter=1):
 	filepath = __getFilePath()
@@ -40,7 +42,6 @@ def __startBetting(driver, counter=1):
 
 		file.close()
 	except:
-		file.close()
 		print('\n!!!!! There was an error reading the file !!!!!\nRETRY ', counter)
 		if counter < 3:
 			counter += 1

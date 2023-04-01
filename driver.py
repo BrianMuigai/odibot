@@ -12,8 +12,13 @@ class Driver():
         service_object = Service(binary_path)
         self.browser = webdriver.Chrome(service=service_object)
 
-    def bet(self, phone, password, code, stake):
-        self.__login(phone, password)
+    def bet(self, phone, password, code, stake, isFirstTime):
+        if isFirstTime:
+            self.__login(phone, password)
+        else:
+            status = self.__loginAnother(phone, password)
+            if status != True:
+                return
         self.__placeBet(code, stake)
 
     def timer(self, t) -> None:
@@ -51,17 +56,30 @@ class Driver():
             msg = 'Could not login user: '+ mPhone +' password: '+ mPass
             self.report.append(msg)
 
-    def logout(self):
-        self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-header.rich.l-mobile > div.l-header-top > div > div.menu > i').click()
-        self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-sidebar.l-mobile.show > div > div:nth-child(6) > ul > li > div').click()
+    def __loginAnother(self, mPhone, mPass) -> bool:
+        self.browser.get("https://odibets.com/login")
 
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(2) > div > input[type=tel]'))
+        )
+        phoneField = self.browser.find_element(By.CSS_SELECTOR, "#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(2) > div > input[type=tel]")
+        passField = self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(3) > div > input[type=password]')
+        
+        self.mPhone = mPhone
+        phoneField.clear()
+        phoneField.send_keys(mPhone)
+        passField.clear()
+        passField.send_keys(mPass)
+
+        self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(4) > button').click()
+        self.timer(5)
         try:
-            WebDriverWait(self.browser, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, '#mobile-web-login'))
-            )
+            self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-header.rich.l-mobile > div.l-header-top > div > a.mybal')
         except:
-            msg = 'Could not log out user: '+self.mPhone
+            msg = 'Could not login user: '+ mPhone +' password: '+ mPass
             self.report.append(msg)
+            return False
+        return True
 
 
     def __placeBet(self, code, stake):
@@ -79,11 +97,18 @@ class Driver():
         stakeBox.send_keys(stake)
         self.timer(2)
 
-        self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div.l-betslip-mobile.l-mobile.show > div > div.bottom > div.bottom-cta > div > button').click()
-        self.timer(5)
+        def close():
+            try:    
+                self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div.l-betslip-mobile.l-mobile.show > div > div.bottom > div.bottom-cta > div > button').click()
+                self.timer(5)
+                self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-modal-mobile.bet.l-mobile.show > div > div.cta > div.c.s > button').click()
+                self.timer(5)
+            except:
+                close()
+        close()
 
 
-    def report(self):
+    def printReport(self):
         print('\n\n\n')
         print('-'*10)
         print('\n')

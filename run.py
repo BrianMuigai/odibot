@@ -20,8 +20,6 @@ def __valid() -> bool:
 		endTimestamp = (float) (config('daysToExpire'))
 		currTimeStamp = datetime.datetime.now().timestamp()
 		return currTimeStamp < endTimestamp
-	else:
-		print('can expire not equal to 1')
 
 	return True
 
@@ -35,10 +33,12 @@ def __startBetting(driver, counter=1):
 		file = open(filepath)
 		next(file)
 		csvreader = csv.reader(file)
+		isFirst = True
 
 		for row in csvreader:
 			phone, password, code, stake = row
-			driver.bet(phone, password, code, stake)
+			driver.bet(phone, password, code, stake, isFirst)
+			isFirst = False
 
 		file.close()
 	except:
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 	if __valid():
 		driver = Driver()
 		__startBetting(driver)
-		driver.report()
+		driver.printReport()
 
 	else:
 		print('*'*10)

@@ -19,7 +19,11 @@ class Driver():
             status = self.__loginAnother(phone, password)
             if status != True:
                 return
-        self.__placeBet(code, stake)
+        try:
+            self.__placeBet(code, stake)
+        except:
+            msg = 'Could not place bet '+code+' for user '+self.mPhone
+            self.report.append(msg)
 
     def timer(self, t) -> None:
          while t:
@@ -67,8 +71,11 @@ class Driver():
         
         self.mPhone = mPhone
         phoneField.clear()
+        self.timer(2)
         phoneField.send_keys(mPhone)
+        self.timer(2)
         passField.clear()
+        self.timer(2)
         passField.send_keys(mPass)
 
         self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(4) > button').click()
@@ -97,24 +104,37 @@ class Driver():
         stakeBox.send_keys(stake)
         self.timer(2)
 
-        def close():
+        def close(counter = 0):
             try:    
                 self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div.l-betslip-mobile.l-mobile.show > div > div.bottom > div.bottom-cta > div > button').click()
                 self.timer(5)
                 self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-modal-mobile.bet.l-mobile.show > div > div.cta > div.c.s > button').click()
                 self.timer(5)
             except:
-                close()
+                counter += 1
+                if counter < 3:
+                    close(counter=counter)
+                else:
+                    msg = 'Could not place bet '+code+' for user '+self.mPhone
+                    self.report.append(msg)
+
         close()
+
+        print('\n\n\n')
+        print('#'*40)
+        print('\n')
+
+        print('Place Bet', code,' for ',self.mPhone)
 
 
     def printReport(self):
         print('\n\n\n')
-        print('-'*10)
+        print('-'*40)
         print('\n')
         
         for msg in self.report:
             print(msg)
 
-        print('-'*10)
+        print('\n')
+        print('-'*40)
         print('\n')

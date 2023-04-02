@@ -5,6 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from chromedriver_py import binary_path
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import utils
 
 class Driver():
     def __init__(self) -> None:
@@ -36,7 +37,7 @@ class Driver():
     def __login(self, mPhone, mPass) -> None:
         self.mPhone = mPhone
         self.browser.get("https://odibets.com")
-        print("Login Odibet...")
+        print("Getting Odibet...")
         WebDriverWait(self.browser, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#mobile-web-login'))
         )
@@ -60,12 +61,22 @@ class Driver():
             msg = 'Could not login user: '+ mPhone +' password: '+ mPass
             self.report.append(msg)
 
-    def __loginAnother(self, mPhone, mPass) -> bool:
+    def __loginAnother(self, mPhone, mPass, counter = 0) -> bool:
         self.browser.get("https://odibets.com/login")
 
-        WebDriverWait(self.browser, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(2) > div > input[type=tel]'))
-        )
+        try:
+            WebDriverWait(self.browser, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(2) > div > input[type=tel]'))
+            )
+        except:
+            counter += 1
+            if counter < 3:
+                self.__loginAnother(mPhone, mPass, counter=counter)
+            else:
+                msg = 'Could not login user: '+ mPhone +' password: '+ mPass
+                self.report.append(msg)
+                return False
+        
         phoneField = self.browser.find_element(By.CSS_SELECTOR, "#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(2) > div > input[type=tel]")
         passField = self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(3) > div > input[type=password]')
         
@@ -128,13 +139,13 @@ class Driver():
 
 
     def printReport(self):
-        print('\n\n\n')
-        print('-'*40)
-        print('\n')
+        utils.printError('\n\n\n')
+        utils.printError('-'*40)
+        utils.printError('\n')
         
         for msg in self.report:
             print(msg)
 
-        print('\n')
-        print('-'*40)
-        print('\n')
+        utils.printError('\n')
+        utils.printError('-'*40)
+        utils.printError('\n')

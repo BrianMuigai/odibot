@@ -2,6 +2,7 @@ from driver import Driver
 from decouple import config
 import datetime
 import csv
+import utils
 
 __banner = """
 88                          
@@ -42,12 +43,12 @@ def __startBetting(driver, counter=1):
 
 		file.close()
 	except:
-		print('\n!!!!! There was an error reading the file !!!!!\nRETRY ', counter)
+		utils.printError('\n!!!!! There was an error reading the file !!!!!\nRETRY '+ counter)
 		if counter < 3:
 			counter += 1
 			__startBetting(counter=counter)
 		else:
-			print('\n\n!!!!! Confirm the validity of the CSV file and try again !!!!!\n\n')
+			utils.printError('\n\n!!!!! Confirm the validity of the CSV file and try again !!!!!\n\n')
 		
 
 if __name__ == '__main__':
@@ -58,7 +59,7 @@ if __name__ == '__main__':
 		driver.printReport()
 
 	else:
-		print('*'*10)
-		print('\n')
-		print('Contact BRI\n')
-		print('*'*10)
+		utils.printError('*'*10)
+		utils.printError('\n')
+		utils.printError('Contact BRI\n')
+		utils.printError('*'*10)

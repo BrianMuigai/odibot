@@ -13,13 +13,8 @@ class Driver():
         service_object = Service(binary_path)
         self.browser = webdriver.Chrome(service=service_object)
 
-    def bet(self, phone, password, code, stake, isFirstTime):
-        if isFirstTime:
-            self.__login(phone, password)
-        else:
-            status = self.__loginAnother(phone, password)
-            if status != True:
-                return
+    def bet(self, phone, password, code, stake):
+        self.__login(phone, password)
         try:
             self.__placeBet(code, stake)
         except:
@@ -37,7 +32,6 @@ class Driver():
     def __login(self, mPhone, mPass) -> None:
         self.mPhone = mPhone
         self.browser.get("https://odibets.com")
-        print("Getting Odibet...")
         WebDriverWait(self.browser, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#mobile-web-login'))
         )
@@ -61,6 +55,7 @@ class Driver():
             msg = 'Could not login user: '+ mPhone +' password: '+ mPass
             self.report.append(msg)
 
+    '''
     def __loginAnother(self, mPhone, mPass, counter = 0) -> bool:
         self.browser.get("https://odibets.com/login")
 
@@ -98,7 +93,7 @@ class Driver():
             self.report.append(msg)
             return False
         return True
-
+        '''
 
     def __placeBet(self, code, stake):
         self.browser.find_element(By.CSS_SELECTOR, '#betslip-bottom-betslip > span.l').click()
@@ -121,31 +116,32 @@ class Driver():
                 self.timer(5)
                 self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-modal-mobile.bet.l-mobile.show > div > div.cta > div.c.s > button').click()
                 self.timer(5)
+                print('\n')
+                print('#'*50)
+
+                print('Place Bet', code,' for ',self.mPhone)
             except:
                 counter += 1
                 if counter < 3:
                     close(counter=counter)
+                    print('\n')
+                    print('#'*50)
+
+                    print('Place Bet', code,' for ',self.mPhone)
                 else:
                     msg = 'Could not place bet '+code+' for user '+self.mPhone
                     self.report.append(msg)
 
         close()
 
-        print('\n\n\n')
-        print('#'*40)
-        print('\n')
-
-        print('Place Bet', code,' for ',self.mPhone)
-
 
     def printReport(self):
-        utils.printError('\n\n\n')
-        utils.printError('-'*40)
-        utils.printError('\n')
-        
-        for msg in self.report:
-            print(msg)
+        if len(self.report) > 0:
+            print('\n\n\n')
+            utils.printError('-'*50)
+            
+            for msg in self.report:
+                utils.printError(msg)
 
-        utils.printError('\n')
-        utils.printError('-'*40)
-        utils.printError('\n')
+            utils.printError('-'*50)
+            print('\n')

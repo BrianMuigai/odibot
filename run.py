@@ -28,7 +28,7 @@ def __getFilePath() -> str:
 	filePath = input('Drag the CSV file here to begin\n')
 	return filePath.strip()
 
-def __startBetting(driver, counter=1):
+def __startBetting(counter=1):
 	filepath = __getFilePath()
 	try:
 		file = open(filepath)
@@ -37,9 +37,10 @@ def __startBetting(driver, counter=1):
 		isFirst = True
 
 		for row in csvreader:
+			driver = Driver()
 			phone, password, code, stake = row
-			driver.bet(phone, password, code, stake, isFirst)
-			isFirst = False
+			driver.bet(phone, password, code, stake)
+			driver.printReport()
 
 		file.close()
 	except:
@@ -54,9 +55,7 @@ def __startBetting(driver, counter=1):
 if __name__ == '__main__':
 	print(__banner)
 	if __valid():
-		driver = Driver()
-		__startBetting(driver)
-		driver.printReport()
+		__startBetting()
 
 	else:
 		utils.printError('*'*10)

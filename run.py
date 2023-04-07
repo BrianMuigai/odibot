@@ -1,8 +1,11 @@
 from driver import Driver
+from selenium import webdriver
 from decouple import config
 import datetime
 import csv
 import utils
+import threading
+from webdriver_manager.opera import OperaDriverManager
 
 __banner = """
 88                          
@@ -28,19 +31,33 @@ def __getFilePath() -> str:
 	filePath = input('Drag the CSV file here to begin\n')
 	return filePath.strip()
 
+def __bet(options, executablePath, phone, password, code, stake):
+	driver = Driver(options=options, executablePath=executablePath)
+	driver.bet(phone, password, code, stake)
+	driver.printReport()
+
 def __startBetting(counter=1):
 	filepath = __getFilePath()
 	try:
 		file = open(filepath)
-		next(file)
+		next(file) #remove the headers
 		csvreader = csv.reader(file)
-		isFirst = True
+		threads = list()
 
+		options = webdriver.ChromeOptions()
+		options.add_argument('allow-elevated-browser')
+		options.add_experimental_option('w3c', True)
+		options.add_argument("--headless")
+		executablePath = OperaDriverManager().install()
+	
 		for row in csvreader:
-			driver = Driver()
 			phone, password, code, stake = row
-			driver.bet(phone, password, code, stake)
-			driver.printReport()
+			x = threading.Thread(target=__bet, args=(options, executablePath, phone, password, code, stake,))
+			threads.append(x)
+			x.start()
+
+		for index, thread in enumerate(threads):
+			thread.join()
 
 		file.close()
 	except:

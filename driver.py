@@ -1,17 +1,18 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from chromedriver_py import binary_path
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import threading
 import utils
 
-class Driver():
-    def __init__(self) -> None:
+class Driver(threading.Thread):
+    def __init__(self, executablePath, options) -> None:
+        super().__init__()
         self.report = []
-        service_object = Service(binary_path)
-        self.browser = webdriver.Chrome(service=service_object)
+        # service_object = Service(binary_path)
+        # self.browser = webdriver.Chrome(service=service_object)
+        self.browser = webdriver.Opera(executable_path=executablePath, options=options)
 
     def bet(self, phone, password, code, stake):
         self.__login(phone, password)
@@ -120,14 +121,11 @@ class Driver():
                 print('#'*50)
 
                 print('Place Bet', code,' for ',self.mPhone)
+                self.browser.close()
             except:
                 counter += 1
                 if counter < 3:
                     close(counter=counter)
-                    print('\n')
-                    print('#'*50)
-
-                    print('Place Bet', code,' for ',self.mPhone)
                 else:
                     msg = 'Could not place bet '+code+' for user '+self.mPhone
                     self.report.append(msg)

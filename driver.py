@@ -2,14 +2,16 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import csv
 import time
 import threading
 import utils
 
 class Driver(threading.Thread):
-    def __init__(self, executablePath, options) -> None:
+    def __init__(self, executablePath, options, lock) -> None:
         super().__init__()
         self.report = []
+        self.lock = lock
         # service_object = Service(binary_path)
         # self.browser = webdriver.Chrome(service=service_object)
         self.browser = webdriver.Opera(executable_path=executablePath, options=options)
@@ -20,7 +22,7 @@ class Driver(threading.Thread):
             self.__placeBet(code, stake)
         except:
             msg = 'Could not place bet '+code+' for user '+self.mPhone
-            self.report.append(msg)
+            self.__addReport(phone, password, code, stake, 'BET', msg)
 
     def timer(self, t) -> None:
          while t:
@@ -32,6 +34,8 @@ class Driver(threading.Thread):
         
     def __login(self, mPhone, mPass) -> None:
         self.mPhone = mPhone
+        self.password = mPass
+
         self.browser.get("https://odibets.com")
         WebDriverWait(self.browser, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, '#mobile-web-login'))
@@ -54,47 +58,7 @@ class Driver(threading.Thread):
             self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-header.rich.l-mobile > div.l-header-top > div > a.mybal')
         except:
             msg = 'Could not login user: '+ mPhone +' password: '+ mPass
-            self.report.append(msg)
-
-    '''
-    def __loginAnother(self, mPhone, mPass, counter = 0) -> bool:
-        self.browser.get("https://odibets.com/login")
-
-        try:
-            WebDriverWait(self.browser, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(2) > div > input[type=tel]'))
-            )
-        except:
-            counter += 1
-            if counter < 3:
-                self.__loginAnother(mPhone, mPass, counter=counter)
-            else:
-                msg = 'Could not login user: '+ mPhone +' password: '+ mPass
-                self.report.append(msg)
-                return False
-        
-        phoneField = self.browser.find_element(By.CSS_SELECTOR, "#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(2) > div > input[type=tel]")
-        passField = self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(3) > div > input[type=password]')
-        
-        self.mPhone = mPhone
-        phoneField.clear()
-        self.timer(2)
-        phoneField.send_keys(mPhone)
-        self.timer(2)
-        passField.clear()
-        self.timer(2)
-        passField.send_keys(mPass)
-
-        self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-container > div:nth-child(1) > div.l-form > div > form > div:nth-child(4) > button').click()
-        self.timer(5)
-        try:
-            self.browser.find_element(By.CSS_SELECTOR, '#body > div.theme-1.l-page.l-mobile.t-light > div.l-page.l-mobile.theme-1.t-dark > div:nth-child(1) > div.l-header.rich.l-mobile > div.l-header-top > div > a.mybal')
-        except:
-            msg = 'Could not login user: '+ mPhone +' password: '+ mPass
-            self.report.append(msg)
-            return False
-        return True
-        '''
+            self.__addReport(mPhone, mPass, '', '', 'LOGIN', msg)
 
     def __placeBet(self, code, stake):
         self.browser.find_element(By.CSS_SELECTOR, '#betslip-bottom-betslip > span.l').click()
@@ -128,18 +92,39 @@ class Driver(threading.Thread):
                     close(counter=counter)
                 else:
                     msg = 'Could not place bet '+code+' for user '+self.mPhone
-                    self.report.append(msg)
+                    self.__addReport(self.mPhone, self.password, code, stake, 'BET', msg)
 
         close()
 
+    def __addReport(self, username, password, booking_code, stake, error, errorMsg):
+        data = {
+            'username':username,
+            'password':password,
+            'booking_code':booking_code,
+            'stake':stake,
+            'error': error,
+            'errorMsg':errorMsg
+        }
+        self.report.append(data)
 
-    def printReport(self):
-        if len(self.report) > 0:
-            print('\n\n\n')
-            utils.printError('-'*50)
-            
-            for msg in self.report:
-                utils.printError(msg)
-
-            utils.printError('-'*50)
-            print('\n')
+    def saveReport(self):
+        #todo handle concurency issue with threads
+        if len(self.report) == 0:
+            return
+        with self.lock:
+            with open('failed.csv', 'a') as file:
+                writer = csv.writer(file)
+                for data in self.report:
+                    if not self.__exists(data['errorMsg']):
+                        row = [data['username'], data['password'], data['booking_code'], data['stake'], data['error'], data['errorMsg']]
+                        writer.writerow(row)
+    
+    def __exists(self, msg):
+        with open('failed.csv') as file:
+            next(file) #removes header
+            reader = csv.reader(file)
+            for row in reader:
+                if row[5] == msg:
+                    return True
+                    
+        return False
